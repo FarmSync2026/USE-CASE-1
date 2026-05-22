@@ -1,191 +1,432 @@
 import java.util.ArrayList;
 import java.util.List;
 
-// 1. ENTITY LAYER (Επίπεδο Οντοτήτων)
+// =======================================================
+// SearchScreen
+// =======================================================
 
-class Product {
-    private String id;
-    private String name;
-    private double quantity;
-    private String pricingRules;
+class SearchScreen {
 
-    public Product(String id, String name, double quantity, String pricingRules) {
-        this.id = id;
-        this.name = name;
-        this.quantity = quantity;
-        this.pricingRules = pricingRules;
+    // Association
+    private ManageProductClass manageProductClass;
+
+    public SearchScreen(
+            ManageProductClass manageProductClass) {
+
+        this.manageProductClass =
+                manageProductClass;
     }
 
-    // Getters και Setters
-    public String getId() { return id; }
-    public String getName() { return name; }
-    
-    // Η μέθοδος getQuantity() που χρησιμοποιείται για την επικύρωση των δεδομένων
-    public double getQuantity() { return quantity; }
-    public String getPricingRules() { return pricingRules; }
+    public void display() {
 
-    public void setQuantity(double quantity) { this.quantity = quantity; }
-    public void setPricingRules(String pricingRules) { this.pricingRules = pricingRules; }
+        System.out.println(
+                "===== SEARCH SCREEN =====");
+
+        System.out.println(
+                "1. Product Management");
+    }
+
+    public void selectProductManage() {
+
+        System.out.println(
+                "Producer selected Product Management");
+
+        manageProductClass.searchProducts();
+    }
 }
 
+// =======================================================
+// ManageProductClass
+// =======================================================
 
+class ManageProductClass {
 
-// 2. INFRASTRUCTURE / UTILITY LAYER (Υποδομή / Βάση Δεδομένων)
+    // Associations
+    private SearchScreen searchScreen;
 
-class DBManager {
-    // Βήμα 6: Επικύρωση διαθεσιμότητας / ονόματος στη Βάση Δεδομένων
-    public boolean checkAvailability(String productName) {
-        System.out.println("[DBManager] Έλεγχος στη Βάση Δεδομένων για την εγκυρότητα του ονόματος: " + productName);
-        return true; 
+    private AvailableProductsScreen
+            availableProductsScreen;
+
+    private DataEntryModificationScreen
+            dataEntryModificationScreen;
+
+    private DBManager dbManager;
+
+    public void init() {
+
+        System.out.println(
+                "Initializing Product Management...");
+
+        this.dbManager = new DBManager();
+
+        this.searchScreen =
+                new SearchScreen(this);
+
+        searchScreen.display();
+    }
+
+    public void searchProducts() {
+
+        System.out.println(
+                "\nSearching Products...");
+
+        List<Product> products =
+                dbManager.readProducts();
+
+        availableProductsScreen =
+                new AvailableProductsScreen(this);
+
+        availableProductsScreen
+                .showProducts(products);
+    }
+
+    public void openProductForm() {
+
+        dataEntryModificationScreen =
+                new DataEntryModificationScreen(this);
+
+        dataEntryModificationScreen
+                .enterProductDetails();
     }
 
     public void saveProduct(Product product) {
-        System.out.println("[DBManager] SQL: INSERT INTO Products VALUES ('" 
-                           + product.getId() + "', '" 
-                           + product.getName() + "', " 
-                           + product.getQuantity() + ", '" 
-                           + product.getPricingRules() + "');");
-        System.out.println("[DBManager] Το προϊόν αποθηκεύτηκε επιτυχώς στη Βάση Δεδομένων.");
-    }
-}
 
+        System.out.println(
+                "\nSaving Product...");
 
+        boolean validQuantity =
+                dbManager
+                .validateProductDetails(product);
 
-// 3. CONTROLLER LAYER (Επίπεδο Ελεγκτών Λογικής)
+        if (!validQuantity) {
 
-clas
-s ManageProductClass {
-    private DBManager dbManager = new DBManager();
+            InvalidQuantityScreen screen =
+                    new InvalidQuantityScreen();
 
-    // Βήμα 2: Αναζήτηση και φόρτωση υπαρχόντων προϊόντων
-    public void loadProducts() {
-        System.out.println("[ManageProductClass] Αναζήτηση υπαρχόντων προϊόντων στη Βάση Δεδομένων...");
-    }
-}
+            screen.display();
 
-
-class DataEntryModificationClass {
-    private DBManager dbManager = new DBManager();
-
-    public void validateProductDetails(String name, double quantity, String pricingRules) {
-        System.out.println("[DataEntryModificationClass] Έναρξη επικύρωσης στοιχείων...");
-
-        if (quantity < 0) {
-            System.out.println("[DataEntryModificationClass] Ανίχνευση λάθους: Ποσότητα < 0 (" + quantity + ")");
-            NoValidQuantityScreen errorScreen = new NoValidQuantityScreen();
-            errorScreen.showQuantityError();
-            return; 
+            return;
         }
 
-        if (pricingRules == null || pricingRules.trim().isEmpty() || pricingRules.equalsIgnoreCase("invalid")) {
-            System.out.println("[DataEntryModificationClass] Ανίχνευση λάθους: Μη έγκυροι κανόνες τιμολόγησης.");
-            InvalidPricingRulesScreen errorRulesScreen = new InvalidPricingRulesScreen();
-            errorRulesScreen.showPricingError();
-            return; 
+        boolean validPricing =
+                dbManager
+                .checkPricingRules(product);
+
+        if (!validPricing) {
+
+            InvalidPricingScreen screen =
+                    new InvalidPricingScreen();
+
+            screen.display();
+
+            return;
         }
 
-        dbManager.checkAvailability(name);
-        
-        String generatedId = "PROD_" + System.currentTimeMillis();
-        Product newProduct = new Product(generatedId, name, quantity, pricingRules);
-        
-        dbManager.saveProduct(newProduct);
+        dbManager.saveProduct(product);
 
-        ValidEntryInformationScreen successScreen = new ValidEntryInformationScreen();
-        successScreen.showSuccess();
+        ValidEntryNotificationScreen screen =
+                new ValidEntryNotificationScreen();
+
+        screen.display();
     }
 }
 
+// =======================================================
+// AvailableProductsScreen
+// =======================================================
 
+class AvailableProductsScreen {
 
-// 4. BOUNDARY LAYER / SCREENS (Επίπεδο Διεπαφών Χρήστη)
+    // Association
+    private ManageProductClass manageProductClass;
 
-class SearchScreen {
-    private ManageProductClass controller = new ManageProductClass();
+    public AvailableProductsScreen(
+            ManageProductClass manageProductClass) {
 
-    // Βήμα 1: Ο παραγωγός επιλέγει "Διαχείριση προϊόντων"
-    public void selectProductMgmt() {
-        System.out.println("[SearchScreen] Ο παραγωγός επιλέγει την 'Διαχείριση προϊόντων'.");
-        controller.loadProducts();
+        this.manageProductClass =
+                manageProductClass;
+    }
+
+    public void showProducts(
+            List<Product> products) {
+
+        System.out.println(
+                "\n===== AVAILABLE PRODUCTS =====");
+
+        for (Product product : products) {
+
+            System.out.println(
+                    "Product: "
+                            + product.getProductName()
+                            + " | Quantity: "
+                            + product.getQuantity());
+        }
+
+        addProduct();
+    }
+
+    private void addProduct() {
+
+        System.out.println(
+                "\nProducer selected Add Product");
+
+        manageProductClass.openProductForm();
+    }
+
+    private void editProduct() {
+
+        System.out.println(
+                "\nProducer selected Edit Product");
     }
 }
 
-
-class AvailableProductScreen {
-    // Βήμα 2: Εμφάνιση λίστας προϊόντων
-    public void showProducts() {
-        System.out.println("[AvailableProductScreen] Εμφάνιση των υπαρχόντων προϊόντων στην οθόνη.");
-    }
-
-    // Βήμα 3: Επιλογή Προσθήκης ή Επεξεργασίας
-    public void selectOption() {
-        System.out.println("[AvailableProductScreen] Ο παραγωγός επιλέγει να προσθέσει νέο προϊόν.");
-    }
-}
-
+// =======================================================
+// DataEntryModificationScreen
+// =======================================================
 
 class DataEntryModificationScreen {
-    private DataEntryModificationClass validationController = new DataEntryModificationClass();
 
-    public void enterDetails(String name, double quantity, String pricingRules) {
-        System.out.println("[DataEntryModificationScreen] Εισαγωγή -> Όνομα: " + name 
-                           + " | Ποσότητα: " + quantity 
-                           + " | Κανόνες: " + pricingRules);
-        
-        validationController.validateProductDetails(name, quantity, pricingRules);
+    // Associations
+    private ManageProductClass manageProductClass;
+
+    private Product product;
+
+    public DataEntryModificationScreen(
+            ManageProductClass manageProductClass) {
+
+        this.manageProductClass =
+                manageProductClass;
+    }
+
+    public void enterProductDetails() {
+
+        System.out.println(
+                "\n===== PRODUCT ENTRY SCREEN =====");
+
+        System.out.println(
+                "Entering Product Details...");
+
+        String productName = "Tomatoes";
+
+        int quantity = 50;
+
+        String pricingRules =
+                "1-10 : 5€, 11-20 : 4€";
+
+        product =
+                new Product(
+                        productName,
+                        quantity,
+                        pricingRules);
+
+        setPricingRules();
+
+        submitProduct();
+    }
+
+    public void modifyProductDetails() {
+
+        System.out.println(
+                "Modifying Product Details...");
+    }
+
+    public void setPricingRules() {
+
+        System.out.println(
+                "Setting Pricing Rules...");
+    }
+
+    public void submitProduct() {
+
+        manageProductClass.saveProduct(product);
     }
 }
 
+// =======================================================
+// Product
+// =======================================================
 
-class ValidEntryInformationScreen {
-    // Βήμα 10: Εμφάνιση μηνύματος επιτυχίας
-    public void showSuccess() {
-        System.out.println("[ValidEntryInformationScreen] UI: Η καταχώρηση του προϊόντος ολοκληρώθηκε επιτυχώς!");
+class Product {
+
+    // Attributes
+    private String productName;
+
+    private int quantity;
+
+    private String pricingRules;
+
+    public Product(
+            String productName,
+            int quantity,
+            String pricingRules) {
+
+        this.productName = productName;
+
+        this.quantity = quantity;
+
+        this.pricingRules = pricingRules;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public String getPricingRules() {
+        return pricingRules;
+    }
+
+    public void setProductDetails(
+            String productName,
+            int quantity,
+            String pricingRules) {
+
+        this.productName = productName;
+
+        this.quantity = quantity;
+
+        this.pricingRules = pricingRules;
+    }
+
+    public void getProductDetails() {
+
+        System.out.println(
+                "Product: " + productName);
+
+        System.out.println(
+                "Quantity: " + quantity);
+
+        System.out.println(
+                "Pricing Rules: "
+                        + pricingRules);
     }
 }
 
+// =======================================================
+// ValidEntryNotificationScreen
+// =======================================================
 
-class InvalidPricingRulesScreen {
-    // Εναλλακτική Ροή Α2
-    public void showPricingError() {
-        System.out.println("[InvalidPricingRulesScreen] UI ΣΦΑΛΜΑ: Οι κανόνες τιμολόγησης παρουσιάζουν λάθη ή επικαλύψεις.");
+class ValidEntryNotificationScreen {
+
+    public void display() {
+
+        System.out.println(
+                "\n===== SUCCESS =====");
+
+        System.out.println(
+                "Product saved successfully");
     }
 }
 
+// =======================================================
+// InvalidPricingScreen
+// =======================================================
 
-class NoValidQuantityScreen {
-    // Εναλλακτική Ροή Α1
-    public void showQuantityError() {
-        System.out.println("[NoValidQuantityScreen] UI ΣΦΑΛΜΑ: Εισάγατε μη έγκυρη (αρνητική) ποσότητα. Δώστε έγκυρη τιμή εκ νέου.");
+class InvalidPricingScreen {
+
+    public void display() {
+
+        System.out.println(
+                "\n===== ERROR =====");
+
+        System.out.println(
+                "Invalid Pricing Rules");
     }
 }
 
+// =======================================================
+// InvalidQuantityScreen
+// =======================================================
 
+class InvalidQuantityScreen {
 
-// 5. MAIN EXECUTION CLASS (Προσομοίωση Σεναρίων)
+    public void display() {
 
-public class FarmSyncUseCase1 {
+        System.out.println(
+                "\n===== ERROR =====");
+
+        System.out.println(
+                "Invalid Quantity");
+    }
+}
+
+// =======================================================
+// DBManager
+// =======================================================
+
+class DBManager {
+
+    public List<Product> readProducts() {
+
+        System.out.println(
+                "Reading products from database...");
+
+        List<Product> products =
+                new ArrayList<>();
+
+        products.add(
+                new Product(
+                        "Potatoes",
+                        100,
+                        "1-10 : 3€"));
+
+        products.add(
+                new Product(
+                        "Tomatoes",
+                        50,
+                        "1-10 : 5€"));
+
+        return products;
+    }
+
+    public boolean validateProductDetails(
+            Product product) {
+
+        System.out.println(
+                "Validating Quantity...");
+
+        return product.getQuantity() >= 0;
+    }
+
+    public boolean checkPricingRules(
+            Product product) {
+
+        System.out.println(
+                "Checking Pricing Rules...");
+
+        return product
+                .getPricingRules() != null;
+    }
+
+    public void saveProduct(Product product) {
+
+        System.out.println(
+                "Saving Product to Database...");
+    }
+}
+
+// =======================================================
+// Main
+// =======================================================
+
+public class Main {
+
     public static void main(String[] args) {
-        SearchScreen searchScreen = new SearchScreen();
-        AvailableProductScreen availableScreen = new AvailableProductScreen();
-        DataEntryModificationScreen entryScreen = new DataEntryModificationScreen();
 
-        System.out.println("======= ΣΕΝΑΡΙΟ Α: Εκκίνηση και Πλοήγηση (Βήματα 1-3) =======");
-        searchScreen.selectProductMgmt();
-        availableScreen.showProducts();
-        availableScreen.selectOption();
+        ManageProductClass manageProductClass =
+                new ManageProductClass();
+
+        manageProductClass.init();
+
         System.out.println();
 
-        System.out.println("======= ΣΕΝΑΡΙΟ Β: Εναλλακτική Ροή Α1 (Μη έγκυρη ποσότητα) =======");
-        entryScreen.enterDetails("Πατάτες Νάξου", -50.0, "Κλίμακα Χονδρικής");
-        System.out.println();
+        SearchScreen searchScreen =
+                new SearchScreen(
+                        manageProductClass);
 
-        System.out.println("======= ΣΕΝΑΡΙΟ Γ: Εναλλακτική Ροή Α2 (Λανθασμένη τιμολόγηση) =======");
-        entryScreen.enterDetails("Ντομάτες Κρήτης", 300.0, "invalid");
-        System.out.println();
-
-        System.out.println("======= ΣΕΝΑΡΙΟ Δ: Βασική Ροή (Επιτυχής Καταχώρηση) =======");
-        entryScreen.enterDetails("Λάχανα Μακεδονίας", 120.0, "Σταθερή τιμή ανά κιλό");
-        System.out.println();
+        searchScreen.selectProductManage();
     }
 }
