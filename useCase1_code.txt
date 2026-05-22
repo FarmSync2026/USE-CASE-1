@@ -26,7 +26,7 @@ class SearchScreen {
                 "1. Product Management");
     }
 
-    public void selectProductManage() {
+    public void selectProductManagement() {
 
         System.out.println(
                 "Producer selected Product Management");
@@ -46,9 +46,6 @@ class ManageProductClass {
 
     private AvailableProductsScreen
             availableProductsScreen;
-
-    private DataEntryModificationScreen
-            dataEntryModificationScreen;
 
     private DBManager dbManager;
 
@@ -82,50 +79,13 @@ class ManageProductClass {
 
     public void openProductForm() {
 
-        dataEntryModificationScreen =
-                new DataEntryModificationScreen(this);
+        DataEntryModificationClass controller =
+                new DataEntryModificationClass(
+                        dbManager);
 
-        dataEntryModificationScreen
-                .enterProductDetails();
-    }
-
-    public void saveProduct(Product product) {
-
-        System.out.println(
-                "\nSaving Product...");
-
-        boolean validQuantity =
-                dbManager
-                .validateProductDetails(product);
-
-        if (!validQuantity) {
-
-            InvalidQuantityScreen screen =
-                    new InvalidQuantityScreen();
-
-            screen.display();
-
-            return;
-        }
-
-        boolean validPricing =
-                dbManager
-                .checkPricingRules(product);
-
-        if (!validPricing) {
-
-            InvalidPricingScreen screen =
-                    new InvalidPricingScreen();
-
-            screen.display();
-
-            return;
-        }
-
-        dbManager.saveProduct(product);
-
-        ValidEntryNotificationScreen screen =
-                new ValidEntryNotificationScreen();
+        DataEntryModificationScreen screen =
+                new DataEntryModificationScreen(
+                        controller);
 
         screen.display();
     }
@@ -187,24 +147,27 @@ class AvailableProductsScreen {
 class DataEntryModificationScreen {
 
     // Associations
-    private ManageProductClass manageProductClass;
+    private DataEntryModificationClass
+            manageDataEntry;
 
     private Product product;
 
     public DataEntryModificationScreen(
-            ManageProductClass manageProductClass) {
+            DataEntryModificationClass manageDataEntry) {
 
-        this.manageProductClass =
-                manageProductClass;
+        this.manageDataEntry =
+                manageDataEntry;
+    }
+
+    public void display() {
+
+        System.out.println(
+                "\n===== DATA ENTRY SCREEN =====");
+
+        enterProductDetails();
     }
 
     public void enterProductDetails() {
-
-        System.out.println(
-                "\n===== PRODUCT ENTRY SCREEN =====");
-
-        System.out.println(
-                "Entering Product Details...");
 
         String productName = "Tomatoes";
 
@@ -221,13 +184,7 @@ class DataEntryModificationScreen {
 
         setPricingRules();
 
-        submitProduct();
-    }
-
-    public void modifyProductDetails() {
-
-        System.out.println(
-                "Modifying Product Details...");
+        submit();
     }
 
     public void setPricingRules() {
@@ -236,9 +193,82 @@ class DataEntryModificationScreen {
                 "Setting Pricing Rules...");
     }
 
-    public void submitProduct() {
+    public void submit() {
 
-        manageProductClass.saveProduct(product);
+        manageDataEntry.saveProduct(product);
+    }
+}
+
+// =======================================================
+// DataEntryModificationClass
+// =======================================================
+
+class DataEntryModificationClass {
+
+    // Associations
+    private DataEntryModificationScreen
+            dataEntryScreen;
+
+    private DBManager dbManager;
+
+    public DataEntryModificationClass(
+            DBManager dbManager) {
+
+        this.dbManager = dbManager;
+    }
+
+    public boolean validateQuantity(
+            Product product) {
+
+        return dbManager
+                .validateProductDetails(product);
+    }
+
+    public boolean validatePricingRules(
+            Product product) {
+
+        return dbManager
+                .checkPricingRules(product);
+    }
+
+    public void saveProduct(
+            Product product) {
+
+        System.out.println(
+                "\nSaving Product...");
+
+        boolean validQuantity =
+                validateQuantity(product);
+
+        if (!validQuantity) {
+
+            NoValidQuantityScreen screen =
+                    new NoValidQuantityScreen();
+
+            screen.display();
+
+            return;
+        }
+
+        boolean validPricing =
+                validatePricingRules(product);
+
+        if (!validPricing) {
+
+            InvalidPricingRulesScreen screen =
+                    new InvalidPricingRulesScreen();
+
+            screen.display();
+
+            return;
+        }
+
+        dbManager.saveProduct(product);
+
+        ValidEntryInformationScreen screen =
+                new ValidEntryInformationScreen();
+
+        screen.display();
     }
 }
 
@@ -306,10 +336,10 @@ class Product {
 }
 
 // =======================================================
-// ValidEntryNotificationScreen
+// ValidEntryInformationScreen
 // =======================================================
 
-class ValidEntryNotificationScreen {
+class ValidEntryInformationScreen {
 
     public void display() {
 
@@ -322,10 +352,10 @@ class ValidEntryNotificationScreen {
 }
 
 // =======================================================
-// InvalidPricingScreen
+// InvalidPricingRulesScreen
 // =======================================================
 
-class InvalidPricingScreen {
+class InvalidPricingRulesScreen {
 
     public void display() {
 
@@ -338,10 +368,10 @@ class InvalidPricingScreen {
 }
 
 // =======================================================
-// InvalidQuantityScreen
+// NoValidQuantityScreen
 // =======================================================
 
-class InvalidQuantityScreen {
+class NoValidQuantityScreen {
 
     public void display() {
 
@@ -401,7 +431,8 @@ class DBManager {
                 .getPricingRules() != null;
     }
 
-    public void saveProduct(Product product) {
+    public void saveProduct(
+            Product product) {
 
         System.out.println(
                 "Saving Product to Database...");
@@ -416,17 +447,16 @@ public class Main {
 
     public static void main(String[] args) {
 
-        ManageProductClass manageProductClass =
+        ManageProductClass manager =
                 new ManageProductClass();
 
-        manageProductClass.init();
+        manager.init();
 
         System.out.println();
 
-        SearchScreen searchScreen =
-                new SearchScreen(
-                        manageProductClass);
+        SearchScreen screen =
+                new SearchScreen(manager);
 
-        searchScreen.selectProductManage();
+        screen.selectProductManagement();
     }
 }
