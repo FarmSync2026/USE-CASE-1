@@ -1,461 +1,261 @@
 import java.util.ArrayList;
 import java.util.List;
 
-// =======================================================
-// SearchScreen
-// =======================================================
 
 class SearchScreen {
-
-    // Association
     private ManageProductClass manageProductClass;
-
-    public SearchScreen(
-            ManageProductClass manageProductClass) {
-
-        this.manageProductClass =
-                manageProductClass;
+    public SearchScreen(ManageProductClass manageProductClass) {
+        this.manageProductClass = manageProductClass;
     }
 
-    public void display() {
-
-        System.out.println(
-                "===== SEARCH SCREEN =====");
-
-        System.out.println(
-                "1. Product Management");
+    public void display(){
+        System.out.println("===== SEARCH SCREEN =====");
+        System.out.println("1. Product Management");
     }
 
-    public void selectProductManagement() {
-
-        System.out.println(
-                "Producer selected Product Management");
-
+    public void selectProductManagement(){
+        System.out.println("\nProducer selected Product Management");
         manageProductClass.searchProducts();
     }
 }
 
-// =======================================================
-// ManageProductClass
-// =======================================================
 
-class ManageProductClass {
-
-    // Associations
+class ManageProductClass{
     private SearchScreen searchScreen;
-
     private AvailableProductsScreen
             availableProductsScreen;
 
     private DBManager dbManager;
 
-    public void init() {
-
-        System.out.println(
-                "Initializing Product Management...");
-
+    public void init(){
+        System.out.println("Initializing Product Management...");
         this.dbManager = new DBManager();
-
-        this.searchScreen =
-                new SearchScreen(this);
-
+        this.searchScreen = new SearchScreen(this);
         searchScreen.display();
     }
 
-    public void searchProducts() {
+    public void searchProducts(){
 
-        System.out.println(
-                "\nSearching Products...");
-
-        List<Product> products =
-                dbManager.readProducts();
-
-        availableProductsScreen =
-                new AvailableProductsScreen(this);
-
-        availableProductsScreen
-                .showProducts(products);
+        System.out.println("\nSearching Products...");
+        List<Product> products = dbManager.readProducts();
+        availableProductsScreen = new AvailableProductsScreen(this);
+        availableProductsScreen.showProducts(products);
     }
 
-    public void openProductForm() {
-
-        DataEntryModificationClass controller =
-                new DataEntryModificationClass(
-                        dbManager);
-
-        DataEntryModificationScreen screen =
-                new DataEntryModificationScreen(
-                        controller);
-
+    public void openProductForm(){
+        DataEntryModificationClass controller = new DataEntryModificationClass(dbManager);
+        DataEntryModificationScreen screen = new DataEntryModificationScreen(controller);
         screen.display();
     }
 }
 
-// =======================================================
-// AvailableProductsScreen
-// =======================================================
 
-class AvailableProductsScreen {
-
-    // Association
+class AvailableProductsScreen{
     private ManageProductClass manageProductClass;
-
-    public AvailableProductsScreen(
-            ManageProductClass manageProductClass) {
-
-        this.manageProductClass =
-                manageProductClass;
+    public AvailableProductsScreen(ManageProductClass manageProductClass) {
+        this.manageProductClass = manageProductClass;
     }
 
-    public void showProducts(
-            List<Product> products) {
-
-        System.out.println(
-                "\n===== AVAILABLE PRODUCTS =====");
-
-        for (Product product : products) {
-
-            System.out.println(
-                    "Product: "
+    public void showProducts(List<Product> products) {
+        System.out.println("\n===== AVAILABLE PRODUCTS =====");
+        for(Product product : products){
+            System.out.println("Product: "
                             + product.getProductName()
                             + " | Quantity: "
                             + product.getQuantity());
         }
-
         addProduct();
     }
 
-    private void addProduct() {
-
-        System.out.println(
-                "\nProducer selected Add Product");
-
+    private void addProduct(){
+        System.out.println("\nProducer selected Add Product");
         manageProductClass.openProductForm();
     }
 
-    private void editProduct() {
-
-        System.out.println(
-                "\nProducer selected Edit Product");
+    private void editProduct(){
+        System.out.println("\nProducer selected Edit Product");
     }
 }
 
-// =======================================================
-// DataEntryModificationScreen
-// =======================================================
 
-class DataEntryModificationScreen {
 
-    // Associations
+class DataEntryModificationScreen{
     private DataEntryModificationClass
             manageDataEntry;
 
     private Product product;
 
-    public DataEntryModificationScreen(
-            DataEntryModificationClass manageDataEntry) {
+    public DataEntryModificationScreen(DataEntryModificationClass manageDataEntry){
 
-        this.manageDataEntry =
-                manageDataEntry;
+        this.manageDataEntry = manageDataEntry;
     }
 
-    public void display() {
-
-        System.out.println(
-                "\n===== DATA ENTRY SCREEN =====");
-
+    public void display(){
+        System.out.println("\n DATA ENTRY SCREEN ");
         enterProductDetails();
     }
 
-    public void enterProductDetails() {
-
+    public void enterProductDetails(){
+        System.out.println("Entering Product Details...");
         String productName = "Tomatoes";
-
         int quantity = 50;
-
-        String pricingRules =
-                "1-10 : 5€, 11-20 : 4€";
-
-        product =
-                new Product(
-                        productName,
-                        quantity,
-                        pricingRules);
-
+        String pricingRules ="1-10 : 5€, 11-20 : 4€";
+        product = new Product(productName, quantity, pricingRules);
         setPricingRules();
-
         submit();
     }
 
-    public void setPricingRules() {
-
-        System.out.println(
-                "Setting Pricing Rules...");
+    public void setPricingRules(){
+        System.out.println("Setting Pricing Rules...");
     }
 
-    public void submit() {
-
+    public void submit(){
         manageDataEntry.saveProduct(product);
     }
 }
 
-// =======================================================
-// DataEntryModificationClass
-// =======================================================
 
-class DataEntryModificationClass {
 
-    // Associations
-    private DataEntryModificationScreen
-            dataEntryScreen;
-
+class DataEntryModificationClass{
     private DBManager dbManager;
-
-    public DataEntryModificationClass(
-            DBManager dbManager) {
-
+    public DataEntryModificationClass(DBManager dbManager) {
         this.dbManager = dbManager;
     }
 
-    public boolean validateQuantity(
-            Product product) {
+    public boolean validateQuantity(Product product){
 
-        return dbManager
-                .validateProductDetails(product);
+        return dbManager.validateProductDetails(product);
     }
 
-    public boolean validatePricingRules(
-            Product product) {
-
-        return dbManager
-                .checkPricingRules(product);
+    public boolean validatePricingRules(Product product) {
+        return dbManager.checkPricingRules(product);
     }
 
-    public void saveProduct(
-            Product product) {
+    public void saveProduct(Product product){
+        System.out.println("\nSaving Product...");
 
-        System.out.println(
-                "\nSaving Product...");
-
-        boolean validQuantity =
-                validateQuantity(product);
-
-        if (!validQuantity) {
-
-            NoValidQuantityScreen screen =
-                    new NoValidQuantityScreen();
-
+        boolean validQuantity = validateQuantity(product);
+        if (!validQuantity){
+            NoValidQuantityScreen screen = new NoValidQuantityScreen();
             screen.display();
-
             return;
         }
 
-        boolean validPricing =
-                validatePricingRules(product);
+        boolean validPricing = validatePricingRules(product);
 
-        if (!validPricing) {
-
-            InvalidPricingRulesScreen screen =
-                    new InvalidPricingRulesScreen();
-
+        if(!validPricing){
+            InvalidPricingRulesScreen screen = new InvalidPricingRulesScreen();
             screen.display();
-
             return;
         }
 
         dbManager.saveProduct(product);
-
-        ValidEntryInformationScreen screen =
-                new ValidEntryInformationScreen();
-
+        ValidEntryInformationScreen screen = new ValidEntryInformationScreen();
         screen.display();
     }
 }
 
-// =======================================================
-// Product
-// =======================================================
 
-class Product {
-
-    // Attributes
+class Product{
     private String productName;
-
     private int quantity;
-
     private String pricingRules;
 
-    public Product(
-            String productName,
-            int quantity,
-            String pricingRules) {
-
+    public Product(String productName, int quantity, String pricingRules) {
         this.productName = productName;
-
         this.quantity = quantity;
-
         this.pricingRules = pricingRules;
     }
 
-    public String getProductName() {
+    public String getProductName(){
         return productName;
     }
 
-    public int getQuantity() {
+    public int getQuantity(){
         return quantity;
     }
 
-    public String getPricingRules() {
+    public String getPricingRules(){
         return pricingRules;
     }
 
-    public void setProductDetails(
-            String productName,
-            int quantity,
-            String pricingRules) {
-
+    public void setProductDetails(String productName, int quantity, String pricingRules) {
         this.productName = productName;
-
         this.quantity = quantity;
-
         this.pricingRules = pricingRules;
     }
 
-    public void getProductDetails() {
-
-        System.out.println(
-                "Product: " + productName);
-
-        System.out.println(
-                "Quantity: " + quantity);
-
-        System.out.println(
-                "Pricing Rules: "
-                        + pricingRules);
+    public void getProductDetails(){
+        System.out.println("Product: " + productName);
+        System.out.println("Quantity: " + quantity);
+        System.out.println("Pricing Rules: " + pricingRules);
     }
 }
 
-// =======================================================
-// ValidEntryInformationScreen
-// =======================================================
 
-class ValidEntryInformationScreen {
-
+class ValidEntryInformationScreen{
     public void display() {
-
-        System.out.println(
-                "\n===== SUCCESS =====");
-
-        System.out.println(
-                "Product saved successfully");
+        System.out.println("\nSUCCESS");
+        System.out.println("Product saved successfully");
     }
 }
 
-// =======================================================
-// InvalidPricingRulesScreen
-// =======================================================
 
-class InvalidPricingRulesScreen {
 
-    public void display() {
-
-        System.out.println(
-                "\n===== ERROR =====");
-
-        System.out.println(
-                "Invalid Pricing Rules");
+class InvalidPricingRulesScreen{
+    public void display(){
+        System.out.println("\n===== ERROR =====");
+        System.out.println("Invalid Pricing Rules");
     }
 }
 
-// =======================================================
-// NoValidQuantityScreen
-// =======================================================
 
-class NoValidQuantityScreen {
 
-    public void display() {
-
-        System.out.println(
-                "\n===== ERROR =====");
-
-        System.out.println(
-                "Invalid Quantity");
+class NoValidQuantityScreen{
+    public void display(){
+        System.out.println("\n===== ERROR =====");
+        System.out.println("Invalid Quantity");
     }
 }
 
-// =======================================================
-// DBManager
-// =======================================================
 
-class DBManager {
+class DBManager{
+    public List<Product> readProducts(){
+        System.out.println("Reading products from database...");
+        List<Product> products = new ArrayList<>();
+        products.add(new Product("Potatoes", 100, "1-10 : 3€"));
 
-    public List<Product> readProducts() {
-
-        System.out.println(
-                "Reading products from database...");
-
-        List<Product> products =
-                new ArrayList<>();
-
-        products.add(
-                new Product(
-                        "Potatoes",
-                        100,
-                        "1-10 : 3€"));
-
-        products.add(
-                new Product(
-                        "Tomatoes",
-                        50,
-                        "1-10 : 5€"));
+        products.add(new Product("Tomatoes", 50, "1-10 : 5€"));
 
         return products;
     }
 
-    public boolean validateProductDetails(
-            Product product) {
-
-        System.out.println(
-                "Validating Quantity...");
-
+    public boolean validateProductDetails(Product product){
+        System.out.println("Validating Quantity...");
         return product.getQuantity() >= 0;
     }
 
-    public boolean checkPricingRules(
-            Product product) {
+    public boolean checkPricingRules(Product product){
+        System.out.println("Checking Pricing Rules...");
 
-        System.out.println(
-                "Checking Pricing Rules...");
-
-        return product
-                .getPricingRules() != null;
+        return product.getPricingRules() != null&& !product.getPricingRules().isEmpty();
     }
 
-    public void saveProduct(
-            Product product) {
-
-        System.out.println(
-                "Saving Product to Database...");
+    public void saveProduct(Product product){
+        System.out.println("Saving Product to Database...");
     }
 }
 
-// =======================================================
-// Main
-// =======================================================
 
-public class Main {
 
-    public static void main(String[] args) {
-
-        ManageProductClass manager =
-                new ManageProductClass();
-
+public class Main{
+    public static void main(String[] args){
+        ManageProductClass manager = new ManageProductClass();
         manager.init();
-
         System.out.println();
 
-        SearchScreen screen =
-                new SearchScreen(manager);
+        SearchScreen screen = new SearchScreen(manager);
+        screen.display();
 
         screen.selectProductManagement();
     }
